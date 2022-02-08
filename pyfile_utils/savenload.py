@@ -1,7 +1,7 @@
 """
 utilities that involve file searching and operations (i.e. save/load)
 """
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Optional, Callable
 import sys
 import logging
 import contextlib
@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 import shutil
 import os
+import yaml
 
 
 # accumulate writes to group for renaming
@@ -43,7 +44,7 @@ def _process_moves(moves: List[Tuple[bool, Path, Path]]):
 
 
 # allow user to enable/disable depending on their filesystem
-_ASYNC_ENABLED = os.environ.get("NEQUIP_ASYNC_IO", "true").lower()
+_ASYNC_ENABLED = os.environ.get("NEQUIP_ASYNC_IO", "false").lower()
 assert _ASYNC_ENABLED in ("true", "false")
 _ASYNC_ENABLED = _ASYNC_ENABLED == "true"
 
@@ -285,6 +286,25 @@ def load_file(supported_formats: dict, filename: str, enforced_format: str = Non
         raise NotImplementedError(
             f"Input format not supported:" f" try from {supported_formats.keys()}"
         )
+
+
+def load_callable(obj: Union[str, Callable], prefix: Optional[str] = None) -> Callable:
+    """Load a callable from a name, or pass through a callable."""
+    if callable(obj):
+        pass
+    elif isinstance(obj, str):
+        if "." not in obj:
+            # It's an unqualified name
+            if prefix is not None:
+                obj = prefix + "." + obj
+            else:
+                # You can't have an unqualified name without a prefix
+                raise ValueError(f"Cannot load unqualified name {obj}.")
+        obj = yaml.load(f"!!python/name:{obj}", Loader=yaml.Loader)
+    else:
+        raise TypeError
+    assert callable(obj), f"{obj} isn't callable"
+    return obj
 
 
 def adjust_format_name(
