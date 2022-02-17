@@ -6,7 +6,7 @@ This code contains all the utils used for logging, disk loading and writing util
 # Installation
 
 ```bash
-pip install 
+pip install pyfile-utils
 ```
 
 DOCS tbd

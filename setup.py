@@ -24,6 +24,7 @@ setup(
     install_requires=[
         "numpy",
         "ase",
+        "pyyaml",
     ],
     zip_safe=True,
     classifiers=(
