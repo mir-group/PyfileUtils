@@ -23,7 +23,6 @@ setup(
     packages=find_packages(include=[name, _name, _name + ".*"]),
     install_requires=[
         "numpy",
-        "ase",
         "pyyaml",
     ],
     zip_safe=True,
