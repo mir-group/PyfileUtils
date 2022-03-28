@@ -19,11 +19,12 @@ setup(
     author_email="nw13mifaso@gmail.com",
     description="A collection of utils for file write/load and instantiation",
     url="https://github.com/mir-group/PyfileUtils",
-    python_requires=">=3.9",
+    python_requires=">=3.6.9",
     packages=find_packages(include=[name, _name, _name + ".*"]),
     install_requires=[
         "numpy",
         "pyyaml",
+        "contextvars",
     ],
     zip_safe=True,
     classifiers=(

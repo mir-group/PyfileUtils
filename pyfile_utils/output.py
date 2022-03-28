@@ -36,10 +36,12 @@ class Output:
         logger = logging.getLogger("")
         logger.setLevel(getattr(logging, verbose.upper()))
 
+        self.loggers = []
+
         if len(logger.handlers) == 0 and (screen or verbose.lower() == "debug"):
             logger.addHandler(logging.StreamHandler(sys.stdout))
 
-        logging.debug("* Initialize Output")
+        logging.debug("* Initialize Global Output")
 
         FORMAT = "%(message)s"
         formatter = logging.Formatter(FORMAT)
@@ -83,12 +85,16 @@ class Output:
             raise ValueError("filename should be a relative path file name")
         file_name = f"{self.workdir}/{file_name}"
 
+
         if isfile(file_name) and not self.append:
             raise RuntimeError(
                 f"Tried to create file `{file_name}` but it already exists and either (1) append is disabled or (2) this run is not a restart"
             )
 
         logging.debug(f"  ...generate file name {file_name}")
+
+        assert file_name not in self.loggers, f"{file_name} already exist in logger"
+
         return file_name
 
     def open_logfile(
@@ -113,6 +119,7 @@ class Output:
         file_name = self.generate_file(file_name)
 
         logger = logging.getLogger(file_name)
+        self.loggers.append(file_name)
         logger.propagate = propagate
         verbose = getattr(logging, self.verbose.upper())
         logger.setLevel(verbose)
@@ -133,6 +140,17 @@ class Output:
         logging.debug(f"  ...open log file {file_name}")
 
         return file_name
+
+    def __del__(self):
+        for file_name in self.loggers:
+            logger = logging.getLogger(file_name)
+            while logger.hasHandlers():
+                handler = logger.handlers[0]
+                if hasattr(handler, "flush"):
+                    handler.flush()
+                if hasattr(handler, "close"):
+                    handler.close()
+                logger.removeHandler(logger.handlers[0])
 
     def as_dict(self):
         d = inspect.signature(Output.__init__)
